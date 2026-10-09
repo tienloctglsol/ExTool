@@ -35,8 +35,11 @@
 		<DebugSymbols>true</DebugSymbols>
 		<Optimize>false</Optimize>
 		<DefineConstants>$(DefineConstants);TRACE;DEBUG</DefineConstants>
-		<StartAction>Program</StartAction>
-		<StartProgram>C:\Program Files\Autodesk\AutoCAD $(AcadVersion)\acad.exe</StartProgram>
+	</PropertyGroup>
+
+	<!-- Dùng trong Properties\launchSettings.json: F5 mở đúng bản AutoCAD theo config -->
+	<PropertyGroup>
+		<AcadExe>C:\Program Files\Autodesk\AutoCAD $(AcadVersion)\acad.exe</AcadExe>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)'=='A21_Release' Or '$(Configuration)'=='A25_Release'">
 		<DebugSymbols>true</DebugSymbols>
@@ -76,6 +79,19 @@
 			<EmbedInteropTypes>False</EmbedInteropTypes>
 		</Reference>
 	</ItemGroup>
+
+	<!-- LoadingLib (lấy từ TakaCAD): cửa sổ loading WPF, copy ra output cùng ExTool.dll -->
+	<ItemGroup>
+		<Reference Include="LoadingLib">
+			<HintPath>Reference\LoadingLib\$(TargetFramework)\LoadingLib.dll</HintPath>
+			<Private>True</Private>
+		</Reference>
+	</ItemGroup>
+
+	<!-- Sinh script NETLOAD sau mỗi lần build, acad.exe /b sẽ chạy script này khi mở -->
+	<Target Name="WriteNetloadScript" AfterTargets="Build">
+		<WriteLinesToFile File="$(TargetDir)LoadExTool.scr" Lines="NETLOAD &quot;$(TargetPath)&quot;" Overwrite="true" WriteOnlyWhenDifferent="true" />
+	</Target>
 
 	<ItemGroup>
 		<Compile Remove="Build\**" />

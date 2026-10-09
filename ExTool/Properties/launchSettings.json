@@ -1,0 +1,22 @@
+{
+  "profiles": {
+    "AutoCAD": {
+      "commandName": "Executable",
+      "executablePath": "$(AcadExe)",
+      "commandLineArgs": "/b \"$(TargetDir)LoadExTool.scr\"",
+      "nativeDebugging": false
+    },
+    "ACAD_21": {
+      "commandName": "Executable",
+      "executablePath": "C:\\Program Files\\Autodesk\\AutoCAD 2021\\acad.exe",
+      "commandLineArgs": "/b \"$(TargetDir)LoadExTool.scr\"",
+      "nativeDebugging": false
+    },
+    "ACAD_25": {
+      "commandName": "Executable",
+      "executablePath": "C:\\Program Files\\Autodesk\\AutoCAD 2025\\acad.exe",
+      "commandLineArgs": "/b \"$(TargetDir)LoadExTool.scr\"",
+      "nativeDebugging": false
+    }
+  }
+}
