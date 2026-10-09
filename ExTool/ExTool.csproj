@@ -1,0 +1,85 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<RootNamespace>ExTool</RootNamespace>
+		<AssemblyName>ExTool</AssemblyName>
+		<Configurations>A21_Debug;A21_Release;A25_Debug;A25_Release</Configurations>
+		<Platforms>x64</Platforms>
+		<PlatformTarget>x64</PlatformTarget>
+		<LangVersion>latest</LangVersion>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>disable</ImplicitUsings>
+		<UseWPF>true</UseWPF>
+		<UseWindowsForms>true</UseWindowsForms>
+		<GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
+		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+		<AssemblyVersion>1.0.0</AssemblyVersion>
+		<FileVersion>1.0.0</FileVersion>
+		<OutputPath>Build\x64\$(Configuration)\</OutputPath>
+		<DebugType>full</DebugType>
+	</PropertyGroup>
+
+	<!-- A21: AutoCAD 2021 (.NET Framework 4.8), A25: AutoCAD 2025 (.NET 8) -->
+	<PropertyGroup Condition="'$(Configuration)'=='A21_Debug' Or '$(Configuration)'=='A21_Release'">
+		<TargetFramework>net48</TargetFramework>
+		<AcadVersion>2021</AcadVersion>
+		<DefineConstants>$(DefineConstants);_AutoCAD_;A21</DefineConstants>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)'=='A25_Debug' Or '$(Configuration)'=='A25_Release'">
+		<TargetFramework>net8.0-windows</TargetFramework>
+		<AcadVersion>2025</AcadVersion>
+		<DefineConstants>$(DefineConstants);_AutoCAD_;A25</DefineConstants>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)'=='A21_Debug' Or '$(Configuration)'=='A25_Debug'">
+		<DebugSymbols>true</DebugSymbols>
+		<Optimize>false</Optimize>
+		<DefineConstants>$(DefineConstants);TRACE;DEBUG</DefineConstants>
+		<StartAction>Program</StartAction>
+		<StartProgram>C:\Program Files\Autodesk\AutoCAD $(AcadVersion)\acad.exe</StartProgram>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)'=='A21_Release' Or '$(Configuration)'=='A25_Release'">
+		<DebugSymbols>true</DebugSymbols>
+		<Optimize>true</Optimize>
+		<DefineConstants>$(DefineConstants);TRACE</DefineConstants>
+	</PropertyGroup>
+
+	<!-- DLL AutoCAD chỉ để biên dịch, không copy ra output -->
+	<ItemGroup Condition="'$(AcadVersion)' != ''">
+		<Reference Include="accoremgd">
+			<HintPath>Reference\AutoCAD$(AcadVersion)_DLL\accoremgd.dll</HintPath>
+			<Private>False</Private>
+		</Reference>
+		<Reference Include="acdbmgd">
+			<HintPath>Reference\AutoCAD$(AcadVersion)_DLL\acdbmgd.dll</HintPath>
+			<Private>False</Private>
+		</Reference>
+		<Reference Include="acmgd">
+			<HintPath>Reference\AutoCAD$(AcadVersion)_DLL\acmgd.dll</HintPath>
+			<Private>False</Private>
+		</Reference>
+		<Reference Include="acdbmgdbrep">
+			<HintPath>Reference\AutoCAD$(AcadVersion)_DLL\acdbmgdbrep.dll</HintPath>
+			<Private>False</Private>
+		</Reference>
+		<Reference Include="AcCui">
+			<HintPath>Reference\AutoCAD$(AcadVersion)_DLL\AcCui.dll</HintPath>
+			<Private>False</Private>
+		</Reference>
+		<Reference Include="AdWindows">
+			<HintPath>Reference\AutoCAD$(AcadVersion)_DLL\AdWindows.dll</HintPath>
+			<Private>False</Private>
+		</Reference>
+		<Reference Include="Autodesk.AutoCAD.Interop">
+			<HintPath>Reference\AutoCAD$(AcadVersion)_DLL\Autodesk.AutoCAD.Interop.dll</HintPath>
+			<Private>False</Private>
+			<EmbedInteropTypes>False</EmbedInteropTypes>
+		</Reference>
+	</ItemGroup>
+
+	<ItemGroup>
+		<Compile Remove="Build\**" />
+		<None Remove="Build\**" />
+		<None Remove="Reference\**" />
+	</ItemGroup>
+</Project>

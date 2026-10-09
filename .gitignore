@@ -1,0 +1,58 @@
+# Output build (Build\x64\<config>\)
+[Bb]uild/
+[Bb]in/
+[Oo]bj/
+[Dd]ebug/
+[Rr]elease/
+x64/
+*_wpftmp.csproj
+
+# Visual Studio / Rider
+.vs/
+.idea/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.userprefs
+*.DotSettings.user
+_ReSharper*/
+*.[Rr]e[Ss]harper
+
+# File tạm của compiler / debugger
+*.pdb
+*.ilk
+*.pch
+*.tmp
+*.tmp_proj
+*.cache
+*.log
+*.binlog
+*.vspscc
+*.vssscc
+
+# NuGet
+*.nupkg
+*.snupkg
+packages/
+project.lock.json
+project.fragment.lock.json
+
+# File tạm AutoCAD khi mở bản vẽ test
+*.dwl
+*.dwl2
+*.bak
+*.sv$
+*.ac$
+acad.err
+plot.log
+
+# Hệ điều hành
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+.DS_Store
+
+# Giữ lại DLL AutoCAD dùng để biên dịch
+!ExTool/Reference/**/*.dll
