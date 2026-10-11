@@ -5,8 +5,9 @@ using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.Runtime;
+using ExTool.Backend.Core;
 
-namespace ExTool
+namespace ExTool.Backend.Commands
 {
 	public class MakeBlockCommand
 	{
@@ -15,9 +16,8 @@ namespace ExTool
 		[CommandMethod("TBL", CommandFlags.Modal | CommandFlags.UsePickSet | CommandFlags.Redraw)]
 		public void MakeBlock()
 		{
-			Document doc = Application.DocumentManager.MdiActiveDocument;
-			Database db = doc.Database;
-			Editor ed = doc.Editor;
+			Database db = CADUtil.Database();
+			Editor ed = CADUtil.Editor();
 
 			var created = new List<ObjectId>();
 			try
@@ -105,7 +105,7 @@ namespace ExTool
 
 				// "*U" -> AutoCAD tự đánh số *U<n>
 				Point3d basePoint = extents.MinPoint;
-				ObjectId blockRefId = BlockBuilder.Create(tr, db, ids, "*U", basePoint, ObjectId.Null);
+				ObjectId blockRefId = BlockBuilder.Create(tr, db, ids, "*U", basePoint, ObjectId.Null, BlockTag.ManualKind);
 				tr.Commit();
 				ed.WriteMessage($"\nĐã tạo block vô danh từ {ids.Count} đối tượng, điểm chèn ({basePoint.X:0.###}, {basePoint.Y:0.###}).");
 				return blockRefId;

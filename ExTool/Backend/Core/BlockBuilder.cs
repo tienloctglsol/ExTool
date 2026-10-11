@@ -2,12 +2,13 @@ using System.Collections.Generic;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
 
-namespace ExTool
+namespace ExTool.Backend.Core
 {
     internal static class BlockBuilder
     {
-        // Clone ids (cùng nằm trong current space) vào block mới, thay bản gốc bằng block reference đặt tại basePoint
-        public static ObjectId Create(Transaction tr, Database db, ObjectIdCollection ids, string name, Point3d basePoint, ObjectId layerId)
+        // Clone ids (cùng nằm trong current space) vào block mới, thay bản gốc bằng block reference đặt tại basePoint;
+        // block reference gắn XData loại block (BlockTag) để lệnh khác nhận diện
+        public static ObjectId Create(Transaction tr, Database db, ObjectIdCollection ids, string name, Point3d basePoint, ObjectId layerId, string kind)
         {
             var blockTable = (BlockTable)tr.GetObject(db.BlockTableId, OpenMode.ForWrite);
             var btr = new BlockTableRecord { Name = name, Origin = Point3d.Origin };
@@ -32,6 +33,7 @@ namespace ExTool
             space.AppendEntity(blockRef);
             tr.AddNewlyCreatedDBObject(blockRef, true);
             AddAttributes(tr, btr, blockRef);
+            BlockTag.Set(tr, db, blockRef, kind);
 
             foreach (ObjectId id in ids)
                 tr.GetObject(id, OpenMode.ForWrite).Erase();

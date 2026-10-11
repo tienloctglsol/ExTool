@@ -4,10 +4,12 @@ using System.Linq;
 using System.Reflection;
 using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.Runtime;
+using ExTool.Backend.Core;
 
 [assembly: ExtensionApplication(typeof(ExTool.App))]
-[assembly: CommandClass(typeof(ExTool.MakeBlockCommand))]
-[assembly: CommandClass(typeof(ExTool.PipeBlockCommand))]
+[assembly: CommandClass(typeof(ExTool.Backend.Commands.MakeBlockCommand))]
+[assembly: CommandClass(typeof(ExTool.Backend.Commands.PipeBlockCommand))]
+[assembly: CommandClass(typeof(ExTool.Backend.Commands.DimLabelCommand))]
 
 namespace ExTool
 {
@@ -35,8 +37,7 @@ namespace ExTool
 
         public void Initialize()
         {
-            var doc = Application.DocumentManager.MdiActiveDocument;
-            doc?.Editor.WriteMessage("\nĐã tải ExTool.");
+            CADUtil.CurDoc()?.Editor.WriteMessage("\nĐã tải ExTool.");
             PipeMarkerSelection.Start();
         }
 

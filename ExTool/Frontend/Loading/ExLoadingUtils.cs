@@ -1,7 +1,7 @@
 using System;
 using LoadingLib;
 
-namespace ExTool.Loading
+namespace ExTool.Frontend.Loading
 {
 	// Bọc LoadingLib của TakaCAD: Start(ms ước lượng) -> SetMessageLoading/ThrowIfCancelled trong vòng lặp -> Close trong finally
 	public static class ExLoadingUtils

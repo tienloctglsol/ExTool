@@ -4,8 +4,9 @@ using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Runtime;
+using ExTool.Backend.Commands;
 
-namespace ExTool
+namespace ExTool.Backend.Core
 {
 	// Chọn rectangle đánh dấu của GOM (đỏ/vàng) thì tự chọn kèm các line liên kết lưu trong XData,
 	// áp dụng cho cả chọn khi không có lệnh (pick first) lẫn chọn trong lệnh (MOVE, COPY...)

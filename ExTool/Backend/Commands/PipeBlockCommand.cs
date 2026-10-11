@@ -6,9 +6,10 @@ using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.Runtime;
-using ExTool.Loading;
+using ExTool.Backend.Core;
+using ExTool.Frontend.Loading;
 
-namespace ExTool
+namespace ExTool.Backend.Commands
 {
 	// Ống = 2 line biên song song cùng layer (theo các đối tượng mẫu), cách nhau không quá đường kính tối đa,
 	// giữa có ít nhất 1 line tim. Mỗi ống thành 1 block gồm 2 biên + các đoạn tim (đoạn vượt đầu ống thì cắt).
@@ -63,9 +64,8 @@ namespace ExTool
 		[CommandMethod("GOM", CommandFlags.Modal | CommandFlags.Redraw)]
 		public void PipeBlock()
 		{
-			Document doc = Application.DocumentManager.MdiActiveDocument;
-			Database db = doc.Database;
-			Editor ed = doc.Editor;
+			Database db = CADUtil.Database();
+			Editor ed = CADUtil.Editor();
 
 			HashSet<ObjectId>? boundaryLayers = PickSampleLayers(ed, db);
 			if (boundaryLayers == null) return;
@@ -102,7 +102,7 @@ namespace ExTool
 						splitCount += CollectCenterLines(tr, db, pipe, segs, used, ids);
 						Point3d basePoint = GetLowerLeft(tr, ids);
 						string name = BlockBuilder.GetUniqueName(blockTable, "Pipe");
-						BlockBuilder.Create(tr, db, ids, name, basePoint, pipe.A.LayerId);
+						BlockBuilder.Create(tr, db, ids, name, basePoint, pipe.A.LayerId, BlockTag.PipeKind);
 						ExLoadingUtils.ReportProgress("Đang tạo block ống", i + 1, pipes.Count, 40, 90);
 					}
 
@@ -142,9 +142,8 @@ namespace ExTool
 		[CommandMethod("XOAGOM", CommandFlags.Modal)]
 		public void ClearMarkers()
 		{
-			Document doc = Application.DocumentManager.MdiActiveDocument;
-			Database db = doc.Database;
-			Editor ed = doc.Editor;
+			Database db = CADUtil.Database();
+			Editor ed = CADUtil.Editor();
 
 			var opts = new PromptKeywordOptions("\nXóa rectangle đánh dấu loại nào?") { AllowNone = false };
 			opts.Keywords.Add(ClearRed);
@@ -576,7 +575,7 @@ namespace ExTool
 			double margin = maxDiameter * MarkerMarginRatio;
 			double width = maxDiameter * MarkerWidthRatio;
 			ObjectId layerId = EnsureMarkerLayer(tr, db);
-			EnsureRegApp(tr, db);
+			XDataUtils.EnsureRegApp(tr, db, MarkerApp);
 			var space = (BlockTableRecord)tr.GetObject(db.CurrentSpaceId, OpenMode.ForWrite);
 
 			foreach (Pipe pair in pairs)
@@ -666,17 +665,6 @@ namespace ExTool
 			ObjectId id = layerTable.Add(record);
 			tr.AddNewlyCreatedDBObject(record, true);
 			return id;
-		}
-
-		private static void EnsureRegApp(Transaction tr, Database db)
-		{
-			var regAppTable = (RegAppTable)tr.GetObject(db.RegAppTableId, OpenMode.ForRead);
-			if (regAppTable.Has(MarkerApp)) return;
-
-			regAppTable.UpgradeOpen();
-			var record = new RegAppTableRecord { Name = MarkerApp };
-			regAppTable.Add(record);
-			tr.AddNewlyCreatedDBObject(record, true);
 		}
 
 		private static Point3d GetLowerLeft(Transaction tr, ObjectIdCollection ids)
