@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Autodesk.AutoCAD.ApplicationServices;
+using Autodesk.AutoCAD.Colors;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
@@ -12,7 +13,7 @@ using ExTool.Frontend.Views;
 
 namespace ExTool.Backend.Commands
 {
-	// Quét vùng -> lọc block ống (XData TBL/GOM) -> mỗi block vẽ 2 dim aligned 2 bên theo 2 cạnh dài nhất, text quay ra ngoài ống
+	// Quét vùng -> lọc block ống (XData TBL/GOM) -> mỗi block vẽ 1 dim aligned theo cạnh dài bên trái, text quay ra ngoài ống, màu theo layer block
 	public class DimLabelCommand
 	{
 		private const double ParallelTolerance = 1e-3;
@@ -133,31 +134,44 @@ namespace ExTool.Backend.Commands
 					var segs = new List<LineSegment3d>();
 					CollectSegments(tr, blockRef.BlockTableRecord, blockRef.BlockTransform, segs, 0);
 
-					List<(LineSegment3d Edge, Vector3d Out)> edges = GetLongestEdges(segs);
-					if (edges.Count == 0)
+					(LineSegment3d Edge, Vector3d Out)? left = GetLeftEdge(segs);
+					if (left == null)
 					{
 						skipped++;
 						continue;
 					}
-					foreach ((LineSegment3d edge, Vector3d outward) in edges)
-					{
-						var dim = new AlignedDimension(edge.StartPoint, edge.EndPoint, edge.MidPoint + outward, "", dimStyleId);
-						dim.SetDatabaseDefaults(db);
-						dim.DimensionStyle = dimStyleId;
-						dim.LayerId = layerId;
-						dim.Dimscale = settings.Scale;
-						dim.Dimtad = TextOutside;
-						// Mép text gần ống cách cạnh ống đúng TextOffset: đường dim lùi vào 1 khoảng DIMGAP (tối thiểu cách ống 1 đơn vị)
-						double lineOffset = Math.Max(1, settings.TextOffset - Math.Abs(dim.Dimgap) * settings.Scale);
-						dim.DimLinePoint = edge.MidPoint + outward * lineOffset;
-						space.AppendEntity(dim);
-						tr.AddNewlyCreatedDBObject(dim, true);
-						count++;
-					}
+					(LineSegment3d edge, Vector3d outward) = left.Value;
+					var dim = new AlignedDimension(edge.StartPoint, edge.EndPoint, edge.MidPoint + outward, "", dimStyleId);
+					dim.SetDatabaseDefaults(db);
+					dim.DimensionStyle = dimStyleId;
+					dim.LayerId = layerId;
+					dim.Dimscale = settings.Scale;
+					dim.Dimtad = TextOutside;
+					dim.Dimrnd = settings.Round;
+					// Đã làm tròn theo số nguyên nên chỉ hiện phần nguyên
+					dim.Dimdec = 0;
+					// Text, đường dim, 2 đường gióng cùng màu layer block ống
+					Color color = GetLayerColor(tr, blockRef.LayerId);
+					dim.Dimclrt = color;
+					dim.Dimclrd = color;
+					dim.Dimclre = color;
+					// Mép text gần ống cách cạnh ống đúng TextOffset: đường dim lùi vào 1 khoảng DIMGAP (tối thiểu cách ống 1 đơn vị)
+					double lineOffset = Math.Max(1, settings.TextOffset - Math.Abs(dim.Dimgap) * settings.Scale);
+					dim.DimLinePoint = edge.MidPoint + outward * lineOffset;
+					space.AppendEntity(dim);
+					tr.AddNewlyCreatedDBObject(dim, true);
+					count++;
 				}
 				tr.Commit();
 			}
 			return count;
+		}
+
+		// Color index của layer block ống; layer dùng true color thì giữ nguyên màu đó
+		private static Color GetLayerColor(Transaction tr, ObjectId layerId)
+		{
+			Color color = ((LayerTableRecord)tr.GetObject(layerId, OpenMode.ForRead)).Color;
+			return color.IsByAci ? Color.FromColorIndex(ColorMethod.ByAci, color.ColorIndex) : color;
 		}
 
 		// Line và đoạn thẳng của polyline trong block (kể cả block lồng), đổi sang WCS
@@ -190,35 +204,30 @@ namespace ExTool.Backend.Commands
 			if (s.DistanceTo(e) > Tolerance.Global.EqualPoint) segs.Add(new LineSegment3d(s, e));
 		}
 
-		// 2 cạnh ngoài cùng song song với cạnh dài nhất (bỏ đường tim ở giữa), hướng Out chỉ ra ngoài block
-		private static List<(LineSegment3d Edge, Vector3d Out)> GetLongestEdges(List<LineSegment3d> segs)
+		// Cạnh bên trái trong 2 cạnh ngoài cùng song song với cạnh dài nhất (bỏ đường tim), Out chỉ ra ngoài block.
+		// Trái theo hướng đọc dim: ống đứng -> bên trái, ống ngang -> phía trên, ống xiên -> phía trên-trái
+		private static (LineSegment3d Edge, Vector3d Out)? GetLeftEdge(List<LineSegment3d> segs)
 		{
-			var result = new List<(LineSegment3d, Vector3d)>();
-			if (segs.Count == 0) return result;
+			if (segs.Count == 0) return null;
 
 			LineSegment3d longest = segs.OrderByDescending(s => s.Length).First();
 			Vector3d u = longest.Direction.GetNormal();
-			var n = new Vector3d(-u.Y, u.X, 0).GetNormal();
+			if (u.X < -ParallelTolerance || (Math.Abs(u.X) <= ParallelTolerance && u.Y < 0)) u = -u;
+			var left = new Vector3d(-u.Y, u.X, 0).GetNormal();
 			Point3d origin = longest.StartPoint;
 
 			var parallels = segs
 				.Where(s => s.Length >= longest.Length * MinEdgeRatio && s.Direction.GetNormal().CrossProduct(u).Length <= ParallelTolerance)
-				.Select(s => (Seg: s, Offset: (s.MidPoint - origin).DotProduct(n)))
+				.Select(s => (Seg: s, Offset: (s.MidPoint - origin).DotProduct(left)))
 				.ToList();
-			var low = parallels.OrderBy(p => p.Offset).ThenByDescending(p => p.Seg.Length).First();
-			var high = parallels.OrderByDescending(p => p.Offset).ThenByDescending(p => p.Seg.Length).First();
-
-			if (high.Offset - low.Offset > Tolerance.Global.EqualPoint)
-			{
-				result.Add((low.Seg, -n));
-				result.Add((high.Seg, n));
-				return result;
-			}
+			var leftMost = parallels.OrderByDescending(p => p.Offset).ThenByDescending(p => p.Seg.Length).First();
+			double rightMost = parallels.Min(p => p.Offset);
+			if (leftMost.Offset - rightMost > Tolerance.Global.EqualPoint)
+				return (leftMost.Seg, left);
 
 			// Chỉ có 1 cạnh: đặt dim về phía xa tâm các đoạn còn lại
 			Point3d center = Point3d.Origin + segs.Aggregate(new Vector3d(), (sum, s) => sum + s.MidPoint.GetAsVector()) / segs.Count;
-			result.Add((longest, (longest.MidPoint - center).DotProduct(n) < 0 ? -n : n));
-			return result;
+			return (longest, (longest.MidPoint - center).DotProduct(left) < 0 ? -left : left);
 		}
 	}
 }

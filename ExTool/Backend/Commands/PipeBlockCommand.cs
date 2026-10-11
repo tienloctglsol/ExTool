@@ -29,6 +29,7 @@ namespace ExTool.Backend.Commands
 		private const string ClearRed = "Do";
 		private const string ClearYellow = "Vang";
 		private const string ClearAll = "Tatca";
+		private const string ClearCustom = "Custom";
 		// Theo đường kính tối đa: khoảng hở quanh line và độ dày nét rectangle
 		private const double MarkerMarginRatio = 0.2;
 		private const double MarkerWidthRatio = 0.05;
@@ -138,7 +139,8 @@ namespace ExTool.Backend.Commands
 				ed.WriteMessage($"\nKhông tạo được ống: {pairCount} cặp line (rectangle vàng), {singleCount} line lẻ (rectangle đỏ). Gõ XOAGOM để xóa các rectangle này.");
 		}
 
-		// Xóa rectangle đánh dấu do GOM tạo theo loại lưu trong XData: đỏ (line lẻ), vàng (cặp line) hoặc tất cả
+		// Xóa rectangle đánh dấu do GOM tạo theo loại lưu trong XData: đỏ (line lẻ), vàng (cặp line), tất cả,
+		// hoặc Custom: user tự quét vùng, chỉ xóa rectangle đỏ/vàng nằm trong vùng đó
 		[CommandMethod("XOAGOM", CommandFlags.Modal)]
 		public void ClearMarkers()
 		{
@@ -149,6 +151,7 @@ namespace ExTool.Backend.Commands
 			opts.Keywords.Add(ClearRed);
 			opts.Keywords.Add(ClearYellow);
 			opts.Keywords.Add(ClearAll);
+			opts.Keywords.Add(ClearCustom);
 			opts.Keywords.Default = _clearMode;
 			PromptResult mode = ed.GetKeywords(opts);
 			if (mode.Status != PromptStatus.OK) return;
@@ -157,14 +160,27 @@ namespace ExTool.Backend.Commands
 			string? targetType = _clearMode == ClearRed ? SingleType : _clearMode == ClearYellow ? PairType : null;
 			string label = _clearMode == ClearRed ? " màu đỏ" : _clearMode == ClearYellow ? " màu vàng" : "";
 
-			// Tắt tự chọn line liên kết để SelectAll chỉ trả về rectangle
+			// Tắt tự chọn line liên kết để selection chỉ gồm rectangle; filter theo XData app nên Custom quét gì cũng chỉ lấy rectangle
 			int count = 0;
-			var filter = new SelectionFilter(new[] { new TypedValue((int)DxfCode.ExtendedDataRegAppName, MarkerApp) });
+			var filter = new SelectionFilter(new[]
+			{
+				new TypedValue((int)DxfCode.Start, "LWPOLYLINE"),
+				new TypedValue((int)DxfCode.ExtendedDataRegAppName, MarkerApp)
+			});
 			PromptSelectionResult res;
 			PipeMarkerSelection.Suspended = true;
 			try
 			{
-				res = ed.SelectAll(filter);
+				if (_clearMode == ClearCustom)
+				{
+					var selectOpts = new PromptSelectionOptions { MessageForAdding = "\nChọn vùng có rectangle đánh dấu cần xóa: " };
+					res = ed.GetSelection(selectOpts, filter);
+					if (res.Status != PromptStatus.OK) return;
+				}
+				else
+				{
+					res = ed.SelectAll(filter);
+				}
 			}
 			finally
 			{

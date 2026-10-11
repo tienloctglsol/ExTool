@@ -7,5 +7,7 @@ namespace ExTool.Backend.Models
 		public string Layer { get; set; } = "";
 		public double Scale { get; set; }
 		public double TextOffset { get; set; } = 200;
+		// DIMRND, số nguyên > 0
+		public int Round { get; set; } = 1;
 	}
 }

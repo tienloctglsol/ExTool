@@ -22,6 +22,7 @@ namespace ExTool.Frontend.Views
 			Select(cbLayer, layers, settings.Layer);
 			tbScale.Text = Format(settings.Scale);
 			tbOffset.Text = Format(settings.TextOffset);
+			tbRound.Text = settings.Round.ToString(CultureInfo.InvariantCulture);
 		}
 
 		private static void Select(ComboBox comboBox, List<string> items, string selected)
@@ -76,11 +77,18 @@ namespace ExTool.Frontend.Views
 				tbOffset.Focus();
 				return;
 			}
+			if (!int.TryParse(tbRound.Text.Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out int round) || round <= 0)
+			{
+				MessageBox.Show(this, "Hệ số làm tròn phải là số nguyên lớn hơn 0.", Title, MessageBoxButton.OK, MessageBoxImage.Warning);
+				tbRound.Focus();
+				return;
+			}
 
 			_settings.DimStyle = (string)cbDimStyle.SelectedItem;
 			_settings.Layer = (string)cbLayer.SelectedItem;
 			_settings.Scale = scale;
 			_settings.TextOffset = offset;
+			_settings.Round = round;
 			DialogResult = true;
 		}
 	}

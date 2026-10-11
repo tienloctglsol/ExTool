@@ -14,6 +14,7 @@
 			<RowDefinition Height="Auto" />
 			<RowDefinition Height="Auto" />
 			<RowDefinition Height="Auto" />
+			<RowDefinition Height="Auto" />
 		</Grid.RowDefinitions>
 
 		<TextBlock Text="Dim style:" VerticalAlignment="Center" Margin="0,4,10,4" />
@@ -38,7 +39,11 @@
 		<TextBlock Grid.Row="3" Text="Khoảng cách text tới ống:" VerticalAlignment="Center" Margin="0,4,10,4" />
 		<TextBox x:Name="tbOffset" Grid.Row="3" Grid.Column="1" Height="24" VerticalContentAlignment="Center" Margin="0,4" />
 
-		<StackPanel Grid.Row="4" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
+		<TextBlock Grid.Row="4" Text="Hệ số làm tròn:" VerticalAlignment="Center" Margin="0,4,10,4" />
+		<TextBox x:Name="tbRound" Grid.Row="4" Grid.Column="1" Height="24" VerticalContentAlignment="Center" Margin="0,4"
+				 ToolTip="Làm tròn số đo tới bội số của giá trị này (DIMRND), số nguyên lớn hơn 0" />
+
+		<StackPanel Grid.Row="5" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
 			<Button Width="80" Height="26" Content="OK" IsDefault="True" Click="Ok_Click" />
 			<Button Width="80" Height="26" Content="Hủy" IsCancel="True" Margin="8,0,0,0" />
 		</StackPanel>

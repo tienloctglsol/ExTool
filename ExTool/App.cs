@@ -37,7 +37,8 @@ namespace ExTool
 
         public void Initialize()
         {
-            CADUtil.CurDoc()?.Editor.WriteMessage("\nĐã tải ExTool.");
+            var version = "1.0.0";
+            CADUtil.CurDoc()?.Editor.WriteMessage($"\nĐã tải ExTool bản {version}");
             PipeMarkerSelection.Start();
         }
 
