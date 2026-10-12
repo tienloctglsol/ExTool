@@ -16,10 +16,6 @@ namespace ExTool.Backend.Commands
 	// Quét vùng -> lọc block ống (XData TBL/GOM) -> mỗi block vẽ 1 dim aligned theo cạnh dài bên trái, text quay ra ngoài ống, màu theo layer block
 	public class DimLabelCommand
 	{
-		private const double ParallelTolerance = 1e-3;
-		// Cạnh song song ngắn hơn tỉ lệ này so với cạnh dài nhất thì không tính là cạnh ống
-		private const double MinEdgeRatio = 0.5;
-		private const int MaxNestedDepth = 4;
 		// DIMTAD = 2: text nằm phía đường dim xa điểm gốc dim (cạnh ống), tức là phía ngoài ống
 		private const int TextOutside = 2;
 
@@ -131,8 +127,7 @@ namespace ExTool.Backend.Commands
 				{
 					if (id.IsErased) continue;
 					var blockRef = (BlockReference)tr.GetObject(id, OpenMode.ForRead);
-					var segs = new List<LineSegment3d>();
-					CollectSegments(tr, blockRef.BlockTableRecord, blockRef.BlockTransform, segs, 0);
+					List<PipeSegment> segs = PipeGeometry.CollectSegments(tr, blockRef);
 
 					(LineSegment3d Edge, Vector3d Out)? left = GetLeftEdge(segs);
 					if (left == null)
@@ -174,60 +169,18 @@ namespace ExTool.Backend.Commands
 			return color.IsByAci ? Color.FromColorIndex(ColorMethod.ByAci, color.ColorIndex) : color;
 		}
 
-		// Line và đoạn thẳng của polyline trong block (kể cả block lồng), đổi sang WCS
-		private static void CollectSegments(Transaction tr, ObjectId btrId, Matrix3d transform, List<LineSegment3d> segs, int depth)
+		// Cạnh bên trái trong 2 cạnh biên, Out chỉ ra ngoài block
+		private static (LineSegment3d Edge, Vector3d Out)? GetLeftEdge(List<PipeSegment> segs)
 		{
-			var btr = (BlockTableRecord)tr.GetObject(btrId, OpenMode.ForRead);
-			foreach (ObjectId id in btr)
-			{
-				if (!(tr.GetObject(id, OpenMode.ForRead) is Entity ent) || !ent.Visible) continue;
-				if (ent is Line line)
-					AddSegment(segs, line.StartPoint, line.EndPoint, transform);
-				else if (ent is Polyline pline)
-				{
-					int segCount = pline.Closed ? pline.NumberOfVertices : pline.NumberOfVertices - 1;
-					for (int i = 0; i < segCount; i++)
-					{
-						if (pline.GetSegmentType(i) != SegmentType.Line) continue;
-						LineSegment3d seg = pline.GetLineSegmentAt(i);
-						AddSegment(segs, seg.StartPoint, seg.EndPoint, transform);
-					}
-				}
-				else if (ent is BlockReference nested && depth < MaxNestedDepth)
-					CollectSegments(tr, nested.BlockTableRecord, transform * nested.BlockTransform, segs, depth + 1);
-			}
-		}
-
-		private static void AddSegment(List<LineSegment3d> segs, Point3d start, Point3d end, Matrix3d transform)
-		{
-			Point3d s = start.TransformBy(transform), e = end.TransformBy(transform);
-			if (s.DistanceTo(e) > Tolerance.Global.EqualPoint) segs.Add(new LineSegment3d(s, e));
-		}
-
-		// Cạnh bên trái trong 2 cạnh ngoài cùng song song với cạnh dài nhất (bỏ đường tim), Out chỉ ra ngoài block.
-		// Trái theo hướng đọc dim: ống đứng -> bên trái, ống ngang -> phía trên, ống xiên -> phía trên-trái
-		private static (LineSegment3d Edge, Vector3d Out)? GetLeftEdge(List<LineSegment3d> segs)
-		{
-			if (segs.Count == 0) return null;
-
-			LineSegment3d longest = segs.OrderByDescending(s => s.Length).First();
-			Vector3d u = longest.Direction.GetNormal();
-			if (u.X < -ParallelTolerance || (Math.Abs(u.X) <= ParallelTolerance && u.Y < 0)) u = -u;
-			var left = new Vector3d(-u.Y, u.X, 0).GetNormal();
-			Point3d origin = longest.StartPoint;
-
-			var parallels = segs
-				.Where(s => s.Length >= longest.Length * MinEdgeRatio && s.Direction.GetNormal().CrossProduct(u).Length <= ParallelTolerance)
-				.Select(s => (Seg: s, Offset: (s.MidPoint - origin).DotProduct(left)))
-				.ToList();
-			var leftMost = parallels.OrderByDescending(p => p.Offset).ThenByDescending(p => p.Seg.Length).First();
-			double rightMost = parallels.Min(p => p.Offset);
-			if (leftMost.Offset - rightMost > Tolerance.Global.EqualPoint)
-				return (leftMost.Seg, left);
+			PipeEdges? edges = PipeGeometry.FindEdges(segs);
+			if (edges == null) return null;
+			if (!edges.IsSingle)
+				return (edges.LeftEdges[0].Seg, edges.Left);
 
 			// Chỉ có 1 cạnh: đặt dim về phía xa tâm các đoạn còn lại
-			Point3d center = Point3d.Origin + segs.Aggregate(new Vector3d(), (sum, s) => sum + s.MidPoint.GetAsVector()) / segs.Count;
-			return (longest, (longest.MidPoint - center).DotProduct(left) < 0 ? -left : left);
+			LineSegment3d longest = edges.Longest.Seg;
+			Point3d center = Point3d.Origin + segs.Aggregate(new Vector3d(), (sum, s) => sum + s.Seg.MidPoint.GetAsVector()) / segs.Count;
+			return (longest, (longest.MidPoint - center).DotProduct(edges.Left) < 0 ? -edges.Left : edges.Left);
 		}
 	}
 }

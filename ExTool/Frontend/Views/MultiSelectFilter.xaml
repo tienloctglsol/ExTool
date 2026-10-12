@@ -1,0 +1,89 @@
+<UserControl x:Class="ExTool.Frontend.Views.MultiSelectFilter"
+			 xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+			 Height="28">
+	<UserControl.Resources>
+		<Style x:Key="DropButton" TargetType="ToggleButton">
+			<Setter Property="Background" Value="White" />
+			<Setter Property="BorderBrush" Value="#D0D7E2" />
+			<Setter Property="Foreground" Value="#1F2937" />
+			<Setter Property="Cursor" Value="Hand" />
+			<Setter Property="Template">
+				<Setter.Value>
+					<ControlTemplate TargetType="ToggleButton">
+						<Border x:Name="bd" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+								BorderThickness="1" CornerRadius="6" Padding="10,0,8,0">
+							<ContentPresenter VerticalAlignment="Center" />
+						</Border>
+						<ControlTemplate.Triggers>
+							<Trigger Property="IsMouseOver" Value="True">
+								<Setter TargetName="bd" Property="BorderBrush" Value="#2D7FF9" />
+							</Trigger>
+							<Trigger Property="IsChecked" Value="True">
+								<Setter TargetName="bd" Property="BorderBrush" Value="#2D7FF9" />
+								<Setter TargetName="bd" Property="Background" Value="#F5F9FF" />
+							</Trigger>
+						</ControlTemplate.Triggers>
+					</ControlTemplate>
+				</Setter.Value>
+			</Setter>
+		</Style>
+
+		<Style x:Key="OptionCheck" TargetType="CheckBox">
+			<Setter Property="Margin" Value="0" />
+			<Setter Property="Padding" Value="6,0,0,0" />
+			<Setter Property="Cursor" Value="Hand" />
+			<Setter Property="VerticalContentAlignment" Value="Center" />
+		</Style>
+	</UserControl.Resources>
+
+	<Grid>
+		<ToggleButton x:Name="btnToggle" Style="{StaticResource DropButton}">
+			<DockPanel>
+				<Path DockPanel.Dock="Right" Data="M0,0 L4,4 L8,0" Stroke="#6B7280" StrokeThickness="1.5"
+					  VerticalAlignment="Center" Margin="8,1,0,0" />
+				<TextBlock x:Name="tbSummary" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+			</DockPanel>
+		</ToggleButton>
+
+		<Popup x:Name="popup" PlacementTarget="{Binding ElementName=btnToggle}" Placement="Bottom" StaysOpen="False"
+			   AllowsTransparency="True" PopupAnimation="Fade"
+			   IsOpen="{Binding IsChecked, ElementName=btnToggle, Mode=TwoWay}"
+			   Opened="Popup_Opened" Closed="Popup_Closed">
+			<Border Margin="0,4,8,8" Background="White" BorderBrush="#E1E5EC" BorderThickness="1" CornerRadius="8"
+					MinWidth="{Binding ActualWidth, ElementName=btnToggle}">
+				<Border.Effect>
+					<DropShadowEffect BlurRadius="12" ShadowDepth="2" Opacity="0.18" />
+				</Border.Effect>
+				<DockPanel Margin="4">
+					<Border DockPanel.Dock="Top" Padding="8,6" BorderBrush="#EEF1F5" BorderThickness="0,0,0,1">
+						<CheckBox x:Name="cbAll" Content="Tất cả" FontWeight="SemiBold" IsThreeState="False"
+								  Style="{StaticResource OptionCheck}" Click="All_Click" />
+					</Border>
+					<ScrollViewer MaxHeight="300" VerticalScrollBarVisibility="Auto">
+						<ItemsControl x:Name="icOptions">
+							<ItemsControl.ItemTemplate>
+								<DataTemplate>
+									<Border x:Name="row" Padding="8,5" CornerRadius="4" Background="Transparent">
+										<CheckBox IsChecked="{Binding IsChecked}" Style="{StaticResource OptionCheck}" Click="Option_Click">
+											<StackPanel Orientation="Horizontal">
+												<Border Width="12" Height="12" CornerRadius="2" Margin="0,0,6,0" Background="{Binding Swatch}"
+														BorderBrush="#9AA3AF" BorderThickness="1" Visibility="{Binding SwatchVisibility}" />
+												<TextBlock Text="{Binding Text}" />
+											</StackPanel>
+										</CheckBox>
+									</Border>
+									<DataTemplate.Triggers>
+										<Trigger SourceName="row" Property="IsMouseOver" Value="True">
+											<Setter TargetName="row" Property="Background" Value="#F2F6FC" />
+										</Trigger>
+									</DataTemplate.Triggers>
+								</DataTemplate>
+							</ItemsControl.ItemTemplate>
+						</ItemsControl>
+					</ScrollViewer>
+				</DockPanel>
+			</Border>
+		</Popup>
+	</Grid>
+</UserControl>

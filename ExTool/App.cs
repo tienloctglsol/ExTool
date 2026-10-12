@@ -10,6 +10,7 @@ using ExTool.Backend.Core;
 [assembly: CommandClass(typeof(ExTool.Backend.Commands.MakeBlockCommand))]
 [assembly: CommandClass(typeof(ExTool.Backend.Commands.PipeBlockCommand))]
 [assembly: CommandClass(typeof(ExTool.Backend.Commands.DimLabelCommand))]
+[assembly: CommandClass(typeof(ExTool.Backend.Commands.PipeColorCommand))]
 
 namespace ExTool
 {

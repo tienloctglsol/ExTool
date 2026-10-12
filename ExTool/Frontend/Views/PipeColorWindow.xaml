@@ -1,0 +1,308 @@
+<Window x:Class="ExTool.Frontend.Views.PipeColorWindow"
+		xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+		xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+		xmlns:local="clr-namespace:ExTool.Frontend.Views"
+		Title="Đổi màu ống" Width="1320" Height="720" MinWidth="1060" MinHeight="460"
+		ResizeMode="CanResizeWithGrip" WindowStartupLocation="CenterScreen" ShowInTaskbar="False"
+		Background="#F3F5F9" FontFamily="Segoe UI" FontSize="12" Foreground="#1F2937">
+	<Window.Resources>
+		<SolidColorBrush x:Key="CadBackground" Color="#1E242C" />
+		<SolidColorBrush x:Key="Accent" Color="#2D7FF9" />
+		<SolidColorBrush x:Key="AccentDark" Color="#1F6AE0" />
+		<SolidColorBrush x:Key="AccentLight" Color="#E8F1FF" />
+		<SolidColorBrush x:Key="CardBorder" Color="#E1E5EC" />
+		<SolidColorBrush x:Key="SubText" Color="#6B7280" />
+
+		<!-- Ống vẽ nằm ngang: text dim + đường dim phía trên, 2 line biên, tim nét chấm gạch ở giữa -->
+		<DataTemplate x:Key="PipePreviewTemplate">
+			<Grid Width="170" Height="50">
+				<TextBlock Text="{Binding DimText}" Foreground="{Binding DimBrush}" FontSize="10" HorizontalAlignment="Center" Margin="0,1,0,0" />
+				<Canvas>
+					<Canvas Visibility="{Binding DimVisibility}">
+						<Line X1="12" Y1="18" X2="158" Y2="18" Stroke="{Binding DimBrush}" StrokeThickness="1" />
+						<Line X1="12" Y1="15" X2="12" Y2="25" Stroke="{Binding DimBrush}" StrokeThickness="1" />
+						<Line X1="158" Y1="15" X2="158" Y2="25" Stroke="{Binding DimBrush}" StrokeThickness="1" />
+						<Line X1="9" Y1="21" X2="15" Y2="15" Stroke="{Binding DimBrush}" StrokeThickness="1.4" />
+						<Line X1="155" Y1="21" X2="161" Y2="15" Stroke="{Binding DimBrush}" StrokeThickness="1.4" />
+					</Canvas>
+					<Line X1="12" Y1="27" X2="158" Y2="27" Stroke="{Binding EdgeBrush}" StrokeThickness="1.8" />
+					<Line X1="6" Y1="35" X2="164" Y2="35" Stroke="#8A8F98" StrokeThickness="0.8" StrokeDashArray="8 3 2 3" />
+					<Line X1="12" Y1="43" X2="158" Y2="43" Stroke="{Binding EdgeBrush}" StrokeThickness="1.8" />
+				</Canvas>
+			</Grid>
+		</DataTemplate>
+
+		<Style x:Key="Card" TargetType="Border">
+			<Setter Property="Background" Value="White" />
+			<Setter Property="BorderBrush" Value="{StaticResource CardBorder}" />
+			<Setter Property="BorderThickness" Value="1" />
+			<Setter Property="CornerRadius" Value="10" />
+			<Setter Property="Padding" Value="12" />
+		</Style>
+
+		<Style x:Key="CardTitle" TargetType="TextBlock">
+			<Setter Property="FontSize" Value="14" />
+			<Setter Property="FontWeight" Value="SemiBold" />
+		</Style>
+
+		<Style x:Key="FilterLabel" TargetType="TextBlock">
+			<Setter Property="VerticalAlignment" Value="Center" />
+			<Setter Property="Margin" Value="0,0,6,0" />
+			<Setter Property="Foreground" Value="{StaticResource SubText}" />
+		</Style>
+
+		<!-- Nút viền trắng -->
+		<Style x:Key="SecondaryButton" TargetType="Button">
+			<Setter Property="Background" Value="White" />
+			<Setter Property="BorderBrush" Value="#D0D7E2" />
+			<Setter Property="Foreground" Value="#1F2937" />
+			<Setter Property="Height" Value="30" />
+			<Setter Property="Padding" Value="14,0" />
+			<Setter Property="Cursor" Value="Hand" />
+			<Setter Property="Template">
+				<Setter.Value>
+					<ControlTemplate TargetType="Button">
+						<Border x:Name="bd" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+								BorderThickness="1" CornerRadius="6" Padding="{TemplateBinding Padding}">
+							<ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+						</Border>
+						<ControlTemplate.Triggers>
+							<Trigger Property="IsMouseOver" Value="True">
+								<Setter TargetName="bd" Property="BorderBrush" Value="{StaticResource Accent}" />
+								<Setter TargetName="bd" Property="Background" Value="#F5F9FF" />
+							</Trigger>
+							<Trigger Property="IsPressed" Value="True">
+								<Setter TargetName="bd" Property="Background" Value="{StaticResource AccentLight}" />
+							</Trigger>
+							<Trigger Property="IsEnabled" Value="False">
+								<Setter Property="Opacity" Value="0.5" />
+							</Trigger>
+						</ControlTemplate.Triggers>
+					</ControlTemplate>
+				</Setter.Value>
+			</Setter>
+		</Style>
+
+		<!-- Nút chính nền xanh -->
+		<Style x:Key="PrimaryButton" TargetType="Button" BasedOn="{StaticResource SecondaryButton}">
+			<Setter Property="Background" Value="{StaticResource Accent}" />
+			<Setter Property="BorderBrush" Value="{StaticResource Accent}" />
+			<Setter Property="Foreground" Value="White" />
+			<Setter Property="FontWeight" Value="SemiBold" />
+			<Setter Property="Template">
+				<Setter.Value>
+					<ControlTemplate TargetType="Button">
+						<Border x:Name="bd" Background="{TemplateBinding Background}" CornerRadius="6" Padding="{TemplateBinding Padding}">
+							<ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+						</Border>
+						<ControlTemplate.Triggers>
+							<Trigger Property="IsMouseOver" Value="True">
+								<Setter TargetName="bd" Property="Background" Value="{StaticResource AccentDark}" />
+							</Trigger>
+							<Trigger Property="IsPressed" Value="True">
+								<Setter TargetName="bd" Property="Background" Value="#1857BC" />
+							</Trigger>
+						</ControlTemplate.Triggers>
+					</ControlTemplate>
+				</Setter.Value>
+			</Setter>
+		</Style>
+
+		<!-- Ô chọn màu mới trong mỗi dòng -->
+		<Style x:Key="SwatchButton" TargetType="Button">
+			<Setter Property="Cursor" Value="Hand" />
+			<Setter Property="Template">
+				<Setter.Value>
+					<ControlTemplate TargetType="Button">
+						<Border x:Name="bd" Background="{StaticResource CadBackground}" BorderBrush="#3A4452" BorderThickness="1.5" CornerRadius="6">
+							<ContentPresenter />
+						</Border>
+						<ControlTemplate.Triggers>
+							<Trigger Property="IsMouseOver" Value="True">
+								<Setter TargetName="bd" Property="BorderBrush" Value="{StaticResource Accent}" />
+							</Trigger>
+						</ControlTemplate.Triggers>
+					</ControlTemplate>
+				</Setter.Value>
+			</Setter>
+		</Style>
+
+		<!-- Dòng danh sách dạng thẻ: viền xanh + nền xanh nhạt khi chọn -->
+		<Style x:Key="PipeItem" TargetType="ListViewItem">
+			<Setter Property="FocusVisualStyle" Value="{x:Null}" />
+			<Setter Property="Template">
+				<Setter.Value>
+					<ControlTemplate TargetType="ListViewItem">
+						<Border x:Name="bd" Background="White" BorderBrush="Transparent" BorderThickness="1" CornerRadius="8"
+								Padding="4" Margin="0,0,0,4">
+							<ContentPresenter />
+						</Border>
+						<ControlTemplate.Triggers>
+							<Trigger Property="IsMouseOver" Value="True">
+								<Setter TargetName="bd" Property="Background" Value="#F7F9FC" />
+								<Setter TargetName="bd" Property="BorderBrush" Value="{StaticResource CardBorder}" />
+							</Trigger>
+							<Trigger Property="IsSelected" Value="True">
+								<Setter TargetName="bd" Property="Background" Value="{StaticResource AccentLight}" />
+								<Setter TargetName="bd" Property="BorderBrush" Value="{StaticResource Accent}" />
+							</Trigger>
+						</ControlTemplate.Triggers>
+					</ControlTemplate>
+				</Setter.Value>
+			</Setter>
+		</Style>
+
+		<Style x:Key="HeaderText" TargetType="TextBlock">
+			<Setter Property="HorizontalAlignment" Value="Center" />
+			<Setter Property="FontWeight" Value="SemiBold" />
+			<Setter Property="Foreground" Value="{StaticResource SubText}" />
+		</Style>
+	</Window.Resources>
+
+	<Grid Margin="14">
+		<Grid.RowDefinitions>
+			<RowDefinition />
+			<RowDefinition Height="Auto" />
+		</Grid.RowDefinitions>
+		<Grid.ColumnDefinitions>
+			<ColumnDefinition MinWidth="220" />
+			<ColumnDefinition Width="12" />
+			<ColumnDefinition Width="Auto" />
+		</Grid.ColumnDefinitions>
+
+		<!-- Sơ đồ vị trí thật các ống, vẽ theo màu mới nếu đã chọn; ống bị lọc ẩn vẽ mờ -->
+		<Border Style="{StaticResource Card}">
+			<DockPanel>
+				<TextBlock DockPanel.Dock="Top" Text="Sơ đồ ống" Style="{StaticResource CardTitle}" Margin="0,0,0,8" />
+				<Border Background="{StaticResource CadBackground}" CornerRadius="8" ClipToBounds="True">
+					<Grid>
+						<local:PipeOverview x:Name="ovPipes" />
+						<Border HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="8" Padding="8,4" CornerRadius="6"
+								Background="#99000000" IsHitTestVisible="False">
+							<TextBlock Foreground="#D1D5DB" FontSize="11" TextWrapping="Wrap"
+									   Text="Bấm: chọn ống · Ctrl: chọn thêm · Lăn chuột: zoom · Giữ chuột giữa: pan · Đúp chuột giữa: xem toàn bộ" />
+						</Border>
+					</Grid>
+				</Border>
+			</DockPanel>
+		</Border>
+
+		<Border Grid.Column="2" Style="{StaticResource Card}">
+			<DockPanel Width="790">
+				<DockPanel DockPanel.Dock="Top" Margin="0,0,0,10" LastChildFill="False">
+					<TextBlock Text="Danh sách ống" Style="{StaticResource CardTitle}" VerticalAlignment="Center" />
+					<Border DockPanel.Dock="Right" Background="{StaticResource AccentLight}" CornerRadius="10" Padding="10,3" VerticalAlignment="Center">
+						<TextBlock x:Name="tbCount" Foreground="{StaticResource Accent}" FontWeight="SemiBold" />
+					</Border>
+				</DockPanel>
+
+				<!-- Bộ lọc chọn nhiều giá trị, cùng thứ tự với cột -->
+				<Border DockPanel.Dock="Top" Background="#F7F9FC" CornerRadius="8" Padding="10,8" Margin="0,0,0,10">
+					<DockPanel LastChildFill="False">
+						<TextBlock Text="Layer" Style="{StaticResource FilterLabel}" />
+						<local:MultiSelectFilter x:Name="fLayer" Width="190" Margin="0,0,14,0" />
+						<TextBlock Text="Đường kính" Style="{StaticResource FilterLabel}" />
+						<local:MultiSelectFilter x:Name="fDiameter" Width="120" Margin="0,0,14,0" />
+						<TextBlock Text="Màu hiện tại" Style="{StaticResource FilterLabel}" />
+						<local:MultiSelectFilter x:Name="fColor" Width="140" />
+						<Button DockPanel.Dock="Right" Content="Bỏ lọc" Height="28" Style="{StaticResource SecondaryButton}" Click="ClearFilter_Click" />
+					</DockPanel>
+				</Border>
+
+				<Border DockPanel.Dock="Top" Background="#F3F6FA" CornerRadius="6" Padding="5,7" Margin="0,0,0,6">
+					<Grid>
+						<Grid.ColumnDefinitions>
+							<ColumnDefinition Width="34" />
+							<ColumnDefinition Width="140" />
+							<ColumnDefinition Width="86" />
+							<ColumnDefinition Width="180" />
+							<ColumnDefinition Width="44" />
+							<ColumnDefinition Width="180" />
+							<ColumnDefinition Width="90" />
+						</Grid.ColumnDefinitions>
+						<TextBlock Text="STT" Style="{StaticResource HeaderText}" />
+						<TextBlock Grid.Column="1" Text="Layer" Style="{StaticResource HeaderText}" />
+						<TextBlock Grid.Column="2" Text="Đường kính" Style="{StaticResource HeaderText}" />
+						<TextBlock Grid.Column="3" Text="Màu hiện tại" Style="{StaticResource HeaderText}" />
+						<TextBlock Grid.Column="5" Text="Màu mới" Style="{StaticResource HeaderText}" />
+						<TextBlock Grid.Column="6" Text="Số lượng" Style="{StaticResource HeaderText}" />
+					</Grid>
+				</Border>
+
+				<local:PipeListView x:Name="lvPipes" SelectionMode="Extended" SelectionChanged="Pipes_SelectionChanged"
+									BorderThickness="0" Background="Transparent" ItemContainerStyle="{StaticResource PipeItem}"
+									ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+									VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.VirtualizationMode="Recycling">
+					<ListView.ItemTemplate>
+						<DataTemplate>
+							<Grid>
+								<Grid.ColumnDefinitions>
+									<ColumnDefinition Width="34" />
+									<ColumnDefinition Width="140" />
+									<ColumnDefinition Width="86" />
+									<ColumnDefinition Width="180" />
+									<ColumnDefinition Width="44" />
+									<ColumnDefinition Width="180" />
+									<ColumnDefinition Width="90" />
+								</Grid.ColumnDefinitions>
+
+								<TextBlock Text="{Binding Index}" HorizontalAlignment="Center" VerticalAlignment="Center"
+										   Foreground="{StaticResource SubText}" />
+
+								<TextBlock Grid.Column="1" Text="{Binding Layer}" ToolTip="{Binding Layer}" HorizontalAlignment="Center"
+										   VerticalAlignment="Center" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" Margin="4,0" />
+
+								<Border Grid.Column="2" Background="#EEF3FB" CornerRadius="11" Padding="10,3"
+										HorizontalAlignment="Center" VerticalAlignment="Center">
+									<TextBlock Text="{Binding Diameter, StringFormat=Ø{0}}" FontWeight="SemiBold" Foreground="#1F4E9E" />
+								</Border>
+
+								<StackPanel Grid.Column="3" HorizontalAlignment="Center">
+									<Border Background="{StaticResource CadBackground}" CornerRadius="6" Padding="4,2">
+										<ContentControl Content="{Binding Current}" ContentTemplate="{StaticResource PipePreviewTemplate}" />
+									</Border>
+									<TextBlock Text="{Binding CurrentName}" HorizontalAlignment="Center" FontSize="11" Margin="0,2,0,0"
+											   Foreground="{StaticResource SubText}" />
+								</StackPanel>
+
+								<Path Grid.Column="4" Data="M2,10 L28,10 M18,2 L28,10 L18,18" Stroke="{StaticResource Accent}" StrokeThickness="2.5"
+									  StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
+									  HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,0,0,16" />
+
+								<StackPanel Grid.Column="5" HorizontalAlignment="Center">
+									<Button Style="{StaticResource SwatchButton}" Click="NewColor_Click"
+											ToolTip="Bấm để chọn màu mới (áp dụng cho cả các dòng đang chọn nếu dòng này nằm trong vùng chọn)">
+										<Grid>
+											<ContentControl Content="{Binding New}" ContentTemplate="{StaticResource PipePreviewTemplate}"
+															Opacity="{Binding NewOpacity}" Margin="4,2" />
+											<TextBlock Text="+ Chọn màu" Visibility="{Binding KeepVisibility}" Foreground="White"
+													   FontWeight="SemiBold" HorizontalAlignment="Center" VerticalAlignment="Center" />
+										</Grid>
+									</Button>
+									<TextBlock Text="{Binding NewName}" HorizontalAlignment="Center" FontSize="11" Margin="0,2,0,0"
+											   Foreground="{StaticResource SubText}" />
+								</StackPanel>
+
+								<StackPanel Grid.Column="6" HorizontalAlignment="Center" VerticalAlignment="Center">
+									<TextBlock Text="{Binding PipeCount}" FontWeight="SemiBold" HorizontalAlignment="Center" />
+									<TextBlock Text="{Binding DimCount}" FontSize="11" Foreground="{StaticResource SubText}" HorizontalAlignment="Center" />
+								</StackPanel>
+							</Grid>
+						</DataTemplate>
+					</ListView.ItemTemplate>
+				</local:PipeListView>
+			</DockPanel>
+		</Border>
+
+		<DockPanel Grid.Row="1" Grid.ColumnSpan="3" Margin="0,12,0,0" LastChildFill="False">
+			<CheckBox x:Name="cbDims" Content="Đổi màu dim đi kèm" VerticalAlignment="Center" VerticalContentAlignment="Center" />
+			<Button Content="Chọn dòng cùng màu" Margin="16,0,0,0" Style="{StaticResource SecondaryButton}" Click="SameColor_Click"
+					ToolTip="Chọn thêm mọi dòng đang hiện có cùng màu hiện tại với các dòng đang chọn" />
+			<Button Content="Chọn màu cho dòng đang chọn..." Margin="8,0,0,0" Style="{StaticResource SecondaryButton}" Click="PickColor_Click" />
+			<Button Content="Giữ nguyên màu" Margin="8,0,0,0" Style="{StaticResource SecondaryButton}" Click="Keep_Click"
+					ToolTip="Bỏ màu mới đã chọn của các dòng đang chọn" />
+			<Button DockPanel.Dock="Right" Width="90" Content="Hủy" IsCancel="True" Margin="8,0,0,0" Style="{StaticResource SecondaryButton}" />
+			<Button DockPanel.Dock="Right" Width="110" Content="Đổi màu" IsDefault="True" Style="{StaticResource PrimaryButton}" Click="Ok_Click" />
+		</DockPanel>
+	</Grid>
+</Window>
